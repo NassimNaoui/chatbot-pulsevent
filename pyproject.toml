@@ -21,3 +21,8 @@ chatbot-pulsevent = "chatbot_pulsevent:main"
 [build-system]
 requires = ["uv_build>=0.12.21,<0.13.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.17.1",
+]
