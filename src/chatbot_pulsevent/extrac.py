@@ -1,16 +1,15 @@
+from src.chatbot_pulsevent.config import Config
 import requests
-from dotenv import load_dotenv
-import os
 import json
 import math
 import time
 
-load_dotenv()
 
 
 class Extrac:
-    def __init__(self):
-        self.API_KEY = os.getenv("API_KEY")
+    def __init__(self): 
+        self.config = Config()
+        self.api_key = self.config.OPENAGENDA_API_KEY
         self.url = "https://api.openagenda.com/v2/requestAccessToken"
         self.url_read_events = "https://api.openagenda.com/v2/events"
         self.after_array = []
@@ -107,7 +106,7 @@ class Extrac:
         # Requête GET 
         response = requests.get(
             self.url_read_events,
-            headers={"key": self.API_KEY},
+            headers={"key": self.api_key},
             params=params,
             timeout=30,
         )
@@ -124,53 +123,9 @@ class Extrac:
 
     def write_json(self, json_file: dict) -> None:
 
-        with open("openAgendaData.json", "w", encoding="utf-8") as file:
+        raw_data_dir = self.config.RAW_DATA_DIR
+        with open(raw_data_dir / "openAgendaData.json", "w", encoding="utf-8") as file:
             json.dump(json_file, file, indent=4, sort_keys=True)
-
-
-def test_batch():
-
-    runner = Extrac()
-    r = 1
-    after_is_null = False
-    data_conso = {
-        "after": [],
-        "events": [],
-        "sort": None,
-        "success": None,
-        "total": None,
-    }
-
-    while after_is_null is not True:
-        data = runner.extrac_events(
-            params={
-                "adminLevel4[]": "Serris",
-                # "timings[gte]":"2025-10-17T00:00:00.000Z",
-                "relative[]": ["current", "upcoming"],
-                "size": 1,
-                "after": data_conso["after"],
-            }
-        )
-
-        total = data["total"]
-
-        if r <= total:
-            print(f"request : {r} / {total}")
-            r = r + 1
-
-        after_is_null = data["after"] is None
-
-        data_conso.update(
-            {
-                "after": data["after"],
-                "sort": data["sort"],
-                "success": data["success"],
-            }
-        )
-
-        data_conso["events"].extend(data["events"])
-
-    runner.write_json(data_conso)
 
 
 if __name__ == "__main__":
